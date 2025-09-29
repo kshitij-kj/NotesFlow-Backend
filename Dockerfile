@@ -2,18 +2,18 @@
 FROM maven:3.8.8-openjdk-17 AS build
 WORKDIR /workspace
 
-# copy wrapper and pom first (caches dependencies)
+# Copy wrapper and pom first
 COPY mvnw .
 COPY .mvn .mvn
 COPY pom.xml .
 
-# ensure wrapper is executable (works even if committed from Windows)
-RUN chmod +x mvnw
+# Convert line endings and make wrapper executable
+RUN sed -i 's/\r$//' mvnw && chmod +x mvnw
 
-# fetch dependencies (offline) to speed subsequent builds
+# Fetch dependencies
 RUN ./mvnw -B dependency:go-offline
 
-# copy source and build
+# Copy source and build
 COPY src ./src
 RUN ./mvnw -B clean package -DskipTests
 
@@ -21,10 +21,11 @@ RUN ./mvnw -B clean package -DskipTests
 FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
 
-# copy built jar (pattern may match your artifact)
+# Copy built jar
 COPY --from=build /workspace/target/*.jar app.jar
 
-# expose default port (Render will assign actual port via $PORT)
+# Render sets $PORT (default 8080 for Spring Boot is fine)
 EXPOSE 8080
 
-ENTRYPOINT ["sh", "-c", "java -Djava.security.egd=file:/dev/./urandom -jar /app/app.jar"]
+# Run the app
+ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "/app/app.jar"]
