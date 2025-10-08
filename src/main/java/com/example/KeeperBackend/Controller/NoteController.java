@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "https://notes-flow-frontend.vercel.app")
 public class NoteController {
     @Autowired
     private NoteService service;
